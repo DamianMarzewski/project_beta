@@ -1,0 +1,175 @@
+Linac 4 
+
+butla z h2 jest podłaczona do bardzo precyzyjnego zaworu piezoelektrycznego
+wodor jest wpuszczany do I komory dzieki temu zaworowi kiedy go potrzeba (panuje tam niska gestosc gazu)
+
+potrzebny impuls elektyczny do zaworu :
+
+------Wzor na mase wpuszczonego wodoru
+
+m = qm * delta t 
+
+m [kg]- masa wodoru
+qm [kg/s]- masowe natezenie przeplywu (jak duzo wyplywa wodoru)
+delta t [s] - czas otwarcia
+
+-------Wzor na koncentracje czasteczek 
+n = [m / (M * V)] * Na
+
+ n [m^-3] – koncentracja cząsteczek. 
+ m [kg] – masa wyliczona 
+ M [kg/mol] – masa molowa wodoru H2, wynosi stałe 2.016 * 10^-3 [kg/mol]
+ V [m^3] – stała objętość komory źródła jonów 
+ Na – Stała Avogadra 6.022 * 10^23mol^-1
+
+ Stała Avogadra mówi nam, ile dokładnie obiektów (atomów, cząsteczek, jonów) znajduje się w jednym molu substancji.
+
+------Wzor na ciśnienie gazu 
+pa = n * kb * T
+
+p [pa] - ciśnienie gazu
+n [m^-3] - koncentracja
+kb - Stała Boltzmanna 1.38 * 10^-23 [J/K]
+T [K] - temperatura
+
+
+
+gaz wlatuje do komory zrozbionej z ceramiki, otocząną metalową cewką, przepuszcza sie w niej prąd o 
+czestotliwosciach RF (mechanizm kuchenki metalowej)
+silne pole magnetyczne rozrywa czateczki gazu h2 na pojedycze atomy h
+potem odrywa od h elektrony i powstaje plazma 
+
+-----Wzór na energie przekazaną przez pole RF
+
+W=qe*Emax*lambda mfp
+
+W [J]- energia jaką zyskuje elektron (jesli energia jest wieksza od energii wiazania atomu dojdzie do rozbicia i jonizacji)
+qe[C] - ładunek elektronu 1,602 * 10^-19 [C]
+lambda mfp [m] - srednia droga swobodna (jak dlugo moze elektron leciec za nim w coś uderzy) 1/n*o o-rozmiar cząsteczki
+
+
+-----Wzór na szybkośc rozpadu cząsteczek H2
+
+dNh2/dt = -Kd * n * ne
+
+dNh2/dt - szybkosc zamiany h2 na h
+kd -  wspolczynni dysocjacji zalezny od energii z pola rf
+n - koncentarcja
+ne - gestosc elektronów w komorze 
+
+----- wzór na powstałą plazmę 
+
+np = pierwiastek(ki*NH)
+
+
+np - koncentracja protonow (gestość plazmy)
+nH[m^-3] - koncentracja pojedyczych atomów wodoru
+Ki - funkcja zależna od temperatury plazmy ( wyznaczana jest przez moc pola rf, im mocniejsze tym ki wieksze)
+
+
+
+na ściany komory napyla się cieniutką warstwę cez'u
+kiedy proton uderza w sciane z cezu zabiera dwa elektrony i odbija sie
+staje sie jonem ujemnym
+na koncu komory znajduje sie maly otwor a za nim elektrody, podlaczone do 45 kV (sily ktora pcha ladunki)
+elektroda przyciaga gwałtownie ujemne jony -> powoduje to z wielkiej chmury utworzenie wiazki
+
+
+----wzor na wydajnosc tworzenia jonow h- na powierzchni cezu
+
+nh- = np* vterm *Scez * Yh-
+Nh-[s^-1] - liczba jonów h-
+np[m^-3] - gestosc protonow w plazmie
+scez[m2] - powierzchnia scianek komory pokrytych cezem
+Yh- - wspolczynnik emicji wtórnej 
+
+
+----wzor na sile przyciagajaca protony do wylotu z komory I
+
+F = qH*Eextr = qH*(Uextr/d)
+F-siła
+qH- - [c] - ładunek jonu h- (1,602 * 10^-19 C)
+Uextr [V] - napięcie elektrody wyciągające (u nas: 45 kV)
+d [m] - odległość od otworu komory do elektrody
+
+----wzor na limit natężenia wiązki (Prawo Childa-Langmuira)
+
+lmax = K * (Uextr^3/2/d^2)
+
+lmax - maksymalny prąd wiazki w amperach
+Uextr [V] - napiecie elektrody
+d[m] - odległość od elektrody
+K - stała perweancja, zależna m.in. od masy jonu i geometrii otworu.
+
+chaotyczna wiązka trafia nastepnie do rfq - miedzianej komory, w której srodku są cztery elektrody ułożone wzdłuż toru jonów
+w rfq działa prąd o czestotliwosciach radiowej ktory zmienia  sie tworzy to pole elketryczne ktore spycha elektrony do srodka
+czyli je ogniskuje
+prety te sa pofaldowane co powdouje odseparowanie od siebie paczek
+
+
+----wzor na siłe ogniskująca 
+
+fboczna = qh- * (V0/a^2) * cos(2pi*f*t)*(x*i-y*j)
+
+fboczna - sila, ktora co ulamek sekundy na zmianę ściska jony w pionie i poziomie (dzięki temu wiązka nie rozbija się o ścianki rury)
+qH - ładunek jonu  (1,602 * 10^-19 C)
+V0 - napiecie pretów RF (amplituda napiecia RFQ)
+a[m] - odległosc od srodka komory do preta
+f[Hz] - czestotliwosc fali radiowej ( u nas 352,2 MHz)
+t[s] - aktualny czas symulacji
+
+-----wzor na siłe paczkujące i przyspieszająca (Efekt pofalowania prętów)
+
+Fwzdłużna = qH-(A*V0*pi)/(2*b*lambda) * sin(2pi*z)/(b*lambda)*sin(2pi*f*t)
+
+A-współczynnik modulacji (zależy od tego, jak mocno pofalowane są pręty w danym miejscu)
+b - relatywistyczna prędkość jonu wyrażona jako ułamek prędkości światła (beta = v/c).
+(lambda) – długość fali radiowej RF w próżni (dla 352,2 MHz wynosi ok. 0,85m).
+z [m] - aktualna pozycja jonu wzdłuż akceleratora
+
+---wzór na długość komórek modulacji (Jak ciąć paczki)
+
+Lc = b*lambda/2
+
+
+jony opuszczaja potem rfq i wlatuja do dtl i ccdtl znajduja tam sie miedizane cylindry w ktorych plynie prad rf
+gdy jon trafia pomiedzy rurke zjednej strony plynie prad o ladunku dodatnim a w drugiej plynie uejmny i tam sie ciagle zmienia prad
+i napedza to jon pomiedyz tymi cyklami jon przeplywa w rurce gdzie nie oddzialowuje na niego pole magnetyczne i jak wyplynie dziala na niego
+juz poprawne pole co powoduje ze nie zwalnia cykl (kopniak -> ukrycie w rurce -> kopniak)
+
+-------wzor na czynnik lorentza
+
+b = v/c
+b-predkosc relatywistyczna
+v-predkosc
+c -predkosc swiatla
+
+gamma = 1/pierwiastek(1-b^2)
+
+gamma-wspolczynnik relatywistyczny (mówi nam jak bedzie sie zachowywac cialo w danej predkosci np. "ile masy nabierze")
+
+-----przyspieszenie relatywistyczne w szczelinie
+
+a = [qH- * Emax * cos(2pi*f*t+o)*Tgap]/[m0*gamma^3]
+a - przyspieszenie, które w pętli czasu dodawane jest do prędkości jonu
+emax  - maksymalne pole w szczelinie
+o - faza wejsciowa fali
+tgap - wspolczynnik czasu przelotu
+m0 [kg] - masa spoczynkowa jonu H- (1,673*10^-27kg)
+y^3-potrojna poprawka einsteina, czym jon jest szybszy tym go trudniej dalej przyspieszyc
+
+
+-----wzor na długośc rurek dryfowych
+Ln=Bn*lambda=vn/f
+
+Ln[m]-długość kolejnej rurki, ponieważ prędkość jonu vn rośnie po każdym kopniaku, każda kolejna rurka w  musi być dłuższa od poprzedniej
+
+Po przejściu wszystkich sekcji DTL i CCDTL na dystansie 86 metrów, jony osiągają ostateczną energię 160 MeV i wylatują z akceleratora Linac 4.
+
+
+T_e = 8.0 / (math.log(p) + 2.0) #[eV] #Średnia temperatura elektronu, (współczyniki wzięte z dokumentów CERN)
+        T_e = max(1.5, min(T_e, 7.0)) #[eV] #Zabezpieczenie przed dziwnymi wynikami
+        E_a_h2 = 4.52 #[eV] #Energia progu, czyli energia, która jest zachowana w wiązaniu
+        A = 1.2e-14 #[m^3/s] #Czynnik przedwykładniczy definiuje częstotliwość zderzeń efektywnych kinetycznie 
+        
+        kd = A * (T_e**0.5) * math.exp(-E_a_h2 / T_e) #Współczynnik dysocjacji 
