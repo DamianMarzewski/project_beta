@@ -1,15 +1,37 @@
 import math
 
-class Proton():
+#Klasa stałych fizycznych - definiuje najważniejsze stałe potrzebne do wyliczeń
+class PhysicalConstants():
     def __init__(self):
-        self.rest_mass = 1.673E-27 #[kg]
-        self.charge = 1.602E-19
+        self.SPEED_OF_LIGHT = 299792458 # [m/s]
+        self.BOLTZMANN_CONSTANT = 1.380649e-23 # [J/K]
+        self.AVOGARD_CONSTANT = 6.022E23 #[1/mol]
 
+#Klasa elektronu - definiuje stałe dla tego obiektu
 class Electron():
     def __init__(self):
-        self.rest_mass = 9.109E-31 #[kg]
-        self.charge = -1.602e-19 #[C]
+        self.rest_mass_kg = 9.109E-31 #[kg]
+        self.rest_mass_mev = 5.11e-1 # [MeV/c^2]
+        self.charge = -1.602176634e-19 #[C]
 
+#Klasa protonu - definiuje stałe dla tego obiektu
+class Proton():
+    def __init__(self):
+        self.rest_mass_kg = 1.673E-27 #[kg]
+        self.rest_mass_mev = 9.3827E2 #[MeV/c^2]
+        self.charge = 1.602E-19 #[C]
+
+#Klasa wodoru - definiuje stałe dla tego obiektu
+class Hydrogen():
+    def __init__(self):
+        self.rest_mass_kg = 1.6737236E-27 #[kg]
+        self.rest_mass_mev = 9.38783E2  # [MeV/c^2]
+
+        self.molar_mass = 1.008E-3 #[kg/mol] #masa molowa jednego atomu wodoru (H)
+
+        self.molecular_diameter = 2.89E-10 #[m] #efektywna średnica cząsteczki wodoru (H2)
+
+#Klasa anionu wodoru - definiuje stałe dla tego obiektu
 class Hydride_ion():
     def __init__(self):
         self.rest_mass_kg = 1.674278E-27 #[kg]
@@ -21,142 +43,162 @@ class Hydride_ion():
 #Klasa wiązki - głównego obiektu, który będzie sterowany przez użytkownika
 class Beam():
     def __init__(self):
-        self.position_x = 0.0 #Współrzędna określająca położenie wiązki wzdłuż osi akceleratora (wymóg dwuwymiarowego świata).  
-        self.position_y = 0.0 #Współrzędna określająca poprzeczne odchylenie wiązki od idealnego środka rury (wymóg dwuwymiarowego świata).  
-        self.angle = 0.0 #Kąt lotu wiązki wyrażony w stopniach, gdzie 0 oznacza lot idealnie na wprost (wymóg kąta startowego).  
+        self.position_x = 0.0 #współrzędna określająca położenie wiązki wzdłuż osi akceleratora  
+        self.position_y = 0.0 #Współrzędna określająca poprzeczne odchylenie wiązki od idealnego środka rury   
+        self.angle = 0.0 #kąt lotu wiązki wyrażony w stopniach, gdzie 0 oznacza lot idealnie na wprost i równolegle do ścian akceleratora  
         
-        self.energy = 4.5E-2 #[MeV] # Aktualna energia kinetyczna wiązki wyrażona w MeV (wartość startowa po ekstrakcji ze źródła). -> na podstawie dokumentów z cern 
-        self.current = None #Prąd wiązki w miliamperach (mA), który wyliczasz na podstawie wydajności cezu i limitu dyszy. funkcja: _> apply_child_langmuir_limit
-        self.N_Intensity = None #Liczba cząstek w paczce (Twój główny zasób ilościowy, który decyduje o szansie na odkrycie bozonu Higgsa). -> funkcja: I_S_calculate_H2_destruction_rate
-        self.epsilon = None #Emitancja (miara chaosu i rozbieżności wiązki), którą wyliczasz z ciśnienia i mocy RF.  -> funkcja: I_S_calculate_beam_emittance
+        self.energy = 4.5E-2 #[MeV] #aktualna energia kinetyczna wiązki
+        self.current = None #[mA] #prąd wiązki wyliczony na podstawie wydajności cezu i limitu otworu
+        self.N_Intensity = None #liczba cząstek w "paczce" wiązki
+        self.epsilon = None #emitancja (miara chaosu i rozbieżności wiązki)
         
-        self.is_alive = True #Flaga logiczna sprawdzająca, czy wiązka nie uległa zniszczeniu (warunek końca symulacji). -> funkcja: dopiero w RFQ
+        self.is_alive = True #flaga logiczna sprawdzająca, czy wiązka nie uległa zniszczeniu 
         
-
-
+#Klasa odcinka w systemie akceleartorów (butla z H2 -> koniec Linac4) - zawiera wszystkie metody fizyczne dla tego odcinka
 class Linac4():
 
-    def __init__(self):
-        self.overall_length = None
+    def __init__(self, PhysicalConstants, Electron, Proton, Hydrogen, Hydride_ion):
+        #Zdefiniowanie obiektów
+        self.PhysicalConstants = PhysicalConstants
+        self.Electron = Electron
+        self.Proton = Proton
+        self.Hydrogen = Hydrogen
+        self.Hydride_ion = Hydride_ion
+        
+        #cała długość odcinka (butla z H2 -> koniec Linac4)
+        self.overall_length = None #[m]
+        
+        #Stałe fizyczne
+        self.KB = self.PhysicalConstants.BOLTZMANN_CONSTANT # [J/K]
+        self.NA = self.PhysicalConstants.AVOGARD_CONSTANT #[1/mol]
 
+        #Stałe elektronu
+        self.electron_charge = self.Electron.charge #[C]
+
+        #Stałe protonu
+        self.proton_rest_mass_kg = self.Proton.rest_mass_kg #[kg]
+        self.proton_rest_mass_mev = self.Proton.rest_mass_mev #[MeV/c^2]
+
+        #Stałe wodoru
+        self.h2_molecular_diameter = self.Hydrogen.molecular_diameter  #[m] 
+        self.hydrogen_molar_mass = self.Hydrogen.molar_mass #[kg/mol]
+
+        #Stałe anionu wodoru
+        self.hydride_rest_mass_kg = self.Hydride_ion.rest_mass_kg #[kg]
+
+        #ION Source
+        self.HYDROGEN_FLOW_RATE = 5E-7 #[kg/s] #natężenie wodoru z zaworu piezoelektrycznego
+        self.I_S_CHAMBER_VOLUME = 2.46E-4 #[m^3] #objętość komory
+        self.I_S_CHAMBER_TEMPERATURE = 300 #[K] #temperatura w komorze
+        self.I_S_EXTRACTION_ELECTRODE_VOLTAGE = 4.5E4 #[V] #siła, z jaką zasilacz w CERN ciągnie jony z komory ION Source
+        self.I_S_ION_TEMPERATURE = 1.0 #[eV] #temperatura jonu wodoru wzięta z dokumentacji CERN
+        self.I_S_AP_AREA_CS = 174e-6 #[m^2] #rzeczywista powierzchnia cezowa wewnątrz komory na której zachodzi jonizacja
+        self.I_S_AP_RADIUS = 3.25 #[mm] #promień otworu wylotowego
+        
     """
     -+/=============================================================/+-
         ION Source - Wszsytkie metody dątyczące tego odcinka Linac4
     -+/=============================================================/+-
     """
 
-    I_S_chamber_volume = 2.46E-4 #[m^3] #Objętość komory
-   
     #Metoda wyliczająca mase wszystkich cząsteczek wodoru znajdującego się w komorze ION Source
-    def I_S_calculate_mass_hydrogen(self, time_ms=0.5):
-        hydrogen_flow_rate = 5E-7 #[kg/s] #Natężenie wodoru z zaworu piezoelektrycznego
-        time_ms = float(input("Podaj czas otwarcia zaworu w milisekundach: ")) #<----------------------------------------tymczasowe
-        time_s = time_ms*1e-3
-        total_hydrogen_mass = hydrogen_flow_rate * time_s #[kg] #ile waży wodór wpuszczony do ION SOURCE
-        print(f"masa wodoru:{total_hydrogen_mass}") #<----------------------------------------tymczasowe
+    def I_S_calculate_mass_hydrogen(self, time_ms):
+        time_s = time_ms*1e-3 #[s] #zmiana jednostki: ms -> s
+        total_hydrogen_mass = self.HYDROGEN_FLOW_RATE * time_s  
+        
         return total_hydrogen_mass
 
     #Metoda obliczająca gęstość liczbową cząsteczek wodoru 
-    def I_S_calculate_number_density(self, mass=0):
-        M = 2.016E-3 #[kg/mol] #masa molowa H2
-        V = 2.46E-4 #[m^3] #Objętość komory
-        NA = 6.022E23 #[1/mol] #Stała Avogarda
+    def I_S_calculate_number_density(self, total_hydrogen_mass):
+        #koncentracja cząsteczek H2 w komorze ION
+        n = (total_hydrogen_mass / ((2*self.hydrogen_molar_mass) * self.I_S_CHAMBER_VOLUME)) * self.NA 
         
-        #n [m^-3] – koncentracja cząsteczek. 
-        n = (mass / (M * V)) * NA
         return n
     
     #Metoda obliczająca ciśnienie panujące w komorze ION Source
-    def I_S_calculate_chamber_pressure(self, n=0): 
-        kb=1.380649E-23 #[J/K] #Stała Boltzmanna
-        T = 300 #[K] #temperatura
-
-        #Ciśnienie wyrażone w pascalach
-        p = n * kb * T
-        print(f"ciśnienie wynosi: {p}") #<----------------------------------------tymczasowe
+    def I_S_calculate_chamber_pressure(self, n): 
+        p = n * self.KB * self.I_S_CHAMBER_TEMPERATURE 
+        
         return p
-
-    #Metoda oblicząjąca:
-    # - energie wytworzoną przez pole magnetyczne fal radiowych
-    # - sprawność plazmy
-    # - moc pola magnetycznego fal radiowych 
-    def I_S_calculate_RF_field_energy(self, qe, n, P_rf):
-        d = 2.89E-10 #[m] 
-        lambda_path = 1 / (math.sqrt(2) * math.pi * n * (d**2)) #średnia droga swobodna
+    
+    #Metoda oblicząjąca energie wytworzoną przez pole magnetyczne fal radiowych i wydajność jonizacji
+    def I_S_calculate_RF_field_energy(self, n, I_S_rf_power_start, I_S_rf_power):
+        lambda_path = 1 / (math.sqrt(2) * math.pi * n * (self.h2_molecular_diameter**2)) #średnia droga swobodna
         
-        P_rf_start = float(input("Podaj moc fal radiowych zakres 40-50 maks 100 kw:")) #<----------------------------------------tymczasowe
-        P_rf= float(input("Podaj moc fal radiowych zakres 10-50 maks 50 kw:")) #<----------------------------------------tymczasowe
-        
-        #Wzór na podstawie danych z documentacji CERN i zasady amplituda pola elektrycznego wewnątrz komory plazmowej jest proporcjonalna 
-        #do pierwiastka kwadratowego z mocy dostarczonej do anteny
-        Emax = 77513.2 * math.sqrt(P_rf/30) 
+        #wzór na podstawie danych z documentacji CERN i relacji: natężenie pole elektrycznego a moc w układach rezonansowych/antnowych
+        max_electric_field = 77513.2 * math.sqrt(I_S_rf_power/30) 
 
-        #Energia przekazana przez pole RF - energia jaką zyskuje elektron [J]
+        #energia przekazana przez pole RF - energia jaką zyskuje elektron 
         #(jeśli energia jest wieksza od energii wiazania atomu dojdzie do rozbicia i jonizacji H2)
-        w = qe*Emax*lambda_path
+        rf_work = abs(self.electron_charge)*max_electric_field*lambda_path 
 
-        if P_rf_start < 40.0:
-            #print("UWAHA: Impuls zapłonowy był za słaby! Plazma utknęła w słabym trybie E.")
-            sprawnosc_plazmy = 0.1  # Tylko 10% atomów wejdzie w stan plazmy
+        if I_S_rf_power_start < 40.0: 
+            #współczynnik wskazujący, że tylko 10% atomów zmieni się w plazme
+            ionization_efficiency = 0.1  
         else:
-            #print("SUKCES: Plazma pomyślnie przeszła w wysokowydajny tryb indukcyjny H!")
-            sprawnosc_plazmy = 1.0  # 100% wydajności zapłonu
+            ionization_efficiency = 1.0 
 
-        print(f"Energia dostarczona przez pole fal radiowych wynosi {Emax} a sprawność magmy wynosi {sprawnosc_plazmy}")
-        return w, sprawnosc_plazmy, P_rf
+        return rf_work, ionization_efficiency, I_S_rf_power
     
     #Metoda obliczająca koncentrację elektronów w plazmie, która jest równa koncentracji protonów w plazmie
-    def I_S_calculate_electron_density(self,  qe, P_rf, sprawnosc_plazmy):
-        V = 2.46E-4 #[m^3] #Objętość komory
-        P_rf = P_rf * 1000 #[w] #kW -> W
+    def I_S_calculate_electron_density(self, I_S_rf_power, ionization_efficiency):
+        I_S_rf_power = I_S_rf_power * 1000 #[w] #zamiana jednostki: kW -> W
         
-        #obliczenie czystej mocy pola magnetycznego, gdzie p_rf jest mocą fal radiowych, 0,65 to procent mocy, która wpływa na elektrony, 
-        czysta_moc = P_rf * 0.65 * sprawnosc_plazmy 
-        E_strat_dzule = 40 * qe #koszt zerwania energetyczny wiązań między atomami i nie udanych prób wcześniejszych
-        loss_rate = 1e5 #ilość elektronów, które podczas jednej sekundy są neutralizowane
+        #obliczenie czystej mocy pola magnetycznego, gdzie współczynnik 0,65 to procent mocy, która wpływa na elektrony, 
+        I_S_net_rf_power = I_S_rf_power * 0.65 * ionization_efficiency 
+        
+        #koszt zerwania energetyczny wiązań między atomami i nie udanych prób wcześniejszych
+        ionization_energy_cost = 40 * abs(self.electron_charge) 
 
-        ne = czysta_moc / (V * loss_rate * E_strat_dzule) #stała ilość elektronów w plazmie
+        #ilość elektronów, które podczas jednej sekundy są neutralizowane
+        recombination_rate = 1e5 
+
+        #stała ilość elektronów w plazmie, jest to koncentracja elektronów 
+        ne = I_S_net_rf_power / (self.I_S_CHAMBER_VOLUME * recombination_rate * ionization_energy_cost) 
 
         return ne
 
     #Metoda obliczająca prąd wiązki anionów wodoru wychodzącej z ION Source
-    def I_S_calculate__beam_current(self, ne, qe):
-        S = 174e-6  #[m^2] # Dokładna powierzchnia elektrody plazmowej pokrytej cezem
-        np = ne #[m^-3] #Z zasady o neutralnym ładunku plazmy, gestość protonów jest równa gestości elektronów
+    def I_S_calculate__beam_current(self, ne):
+        #zasada quasi-neutralności plazmy, czyli można przyjąc, że gestość jonów dodatnich jest równa gestości elektronów
+        np = ne 
+
+        #średnia prędkość jonów wodoru
+        hydride_vterm = math.sqrt((8 * self.I_S_ION_TEMPERATURE * abs(self.electron_charge)) / (math.pi * self.hydride_rest_mass_kg)) 
         
-        Ti_ev = 1.0 #[eV] #Temperatura protonu wzięta z dokumentacji CERN
-        e_charge = 1.602e-19 # ładunek elektronu (przelicznik eV na Dżule)
-        m_p = 1.673e-27 # masa protonu w kg
-    
-        vterm = math.sqrt((8 * Ti_ev * e_charge) / (math.pi * m_p)) #Średnia prędkość protonu 
+        T_ces = float(input("Podaj temperaturę pieca cezu w °C (100 - 180): ")) #[°C] <--------tymczasowe
         
-        T_ces = float(input("Podaj temperaturę pieca cezu w °C (100 - 180): "))
-        #Wzór Gaussa na sprawność cezu (eta) reprezentuje wydajność, z jaką powierzchnia elektrody przekształca uderzające w nią cząsteczki w jony ujemne wodoru
+        #wzór Gaussa na sprawność cezu (eta) reprezentuje wydajność, z jaką powierzchnia elektrody przekształca uderzające w nią cząsteczki w jony ujemne wodoru
         eta_ces = math.exp(-((T_ces - 150) ** 2) / 200)
         
-        hydride_production_rate = np* vterm * S * eta_ces #całkowita liczbę anionów wodoru, jaka rodzi się w ciągu jednej sekundy na cezowej elektrodzie
-
-        qe = abs(qe) #wartość bezwzględna z ładunku, ponieważ prąd nie może być ujemny
-        I_gen = qe * hydride_production_rate * eta_ces #[A] #wylicza ile jaki prąd został wygenerowany w wiązcę, która opuści Ion Source
-        V_extraction = 4.5E4 #siła, z jaką zasilacz w CERN ciągnie jony do przodu
-        I_limit = 4.71E-10 * (V_extraction ** 1.5) #Wynik działania prawa Childa-Langmuira. Pokazuje maksymalną przepustowość
+        #całkowita liczbę anionów wodoru, jaka rodzi się w ciągu jednej sekundy na cezowej elektrodzie
+        hydride_production_rate = np* hydride_vterm * self.I_S_AP_AREA_CS * eta_ces 
         
-        # Wybieramy mniejszą wartość
+        #wylicza ile jaki prąd został wygenerowany w wiązcę, która opuści Ion Source
+        I_gen = abs(self.electron_charge) * hydride_production_rate 
+        
+        #wynik działania prawa Childa-Langmuira - pokazuje maksymalną przepustowość
+        I_limit = 4.71E-10 * (self.I_S_EXTRACTION_ELECTRODE_VOLTAGE ** 1.5) 
+        
+        #sprawdzenie i wybór miejszej wartości (prad ma ograniczoną przepustowość)
         I_final = min(I_gen, I_limit)
+        
         return I_final
+    
+    #metoda licząca ilość jonów, które wypłyneły z ion source na podstawie ilosci ladunków elektrycznych
+    def I_S_calculate_beam_intensity(self, I_final):
+        #czas trwania impulsu w CERN (600 mikrosekund)
+        t_pulse = 0.0006 
+        
+        #liczba cząstek w wiązce
+        N_Intensity = (I_final * t_pulse) / abs(self.electron_charge) 
+        
+        return N_Intensity
         
     #Metoda obliczająca znormalizowaną emitancję termiczną (epsilon) wiązki
-    def I_S_calculate_beam_emittance(self, Ti_ev=0.5):
-        Ti_ev = 1.0 #[eV]
-        
-        #Promień otworu elektrody w milimetrach (standard dla Linac4 to ok. 3 mm)
-        r_mm =  3.25
-        
-        # 2. Energia spoczynkowa protonu w eV (m_p * c^2)
-        E_rest_ev = 938.27e6  
-        
-        # 3. Obliczenie epsilon ze wzoru termicznego
-        epsilon = r_mm * math.sqrt(Ti_ev / E_rest_ev) # [pi * mm * mrad]
+    def I_S_calculate_beam_emittance(self):
+        #obliczenie epsilon ze wzoru termicznego
+        epsilon = self.I_S_AP_RADIUS * math.sqrt(self.I_S_ION_TEMPERATURE / (self.proton_rest_mass_mev * 1e6)) #[pi * mm * mrad]
         
         return epsilon
        
@@ -184,25 +226,41 @@ class Linac4():
         Pi-Mode Structure (PIMS) - wszsytkie metody 
     -+/=============================================/+-
     """
-    
-    
-    
-    
-    #Wszystko dotyczące :
-    
-    
 
-    #Wszystko dotyczące :
+'''
+Przeprowadzenie testowej symulacji
+
+'''
+
+l4 = Linac4(PhysicalConstants(), Electron(), Proton(), Hydrogen(), Hydride_ion())
+
+wiazka = Beam()
+
+time_ms = float(input("Podaj czas otwarcia zaworu w milisekundach: "))
+total_hydrogen_mass=l4.I_S_calculate_mass_hydrogen(time_ms)
+
+n=l4.I_S_calculate_number_density(total_hydrogen_mass)
+
+p=l4.I_S_calculate_chamber_pressure(n)
+
+I_S_rf_power_start = float(input("Podaj moc startowa fal radiowych zakres 40-50 maks 100 kw:")) 
+I_S_rf_power= float(input("Podaj moc fal radiowych zakres 10-50 maks 50 kw:")) 
+
+rf_work, ionization_efficiency, I_S_rf_power = l4.I_S_calculate_RF_field_energy(n, I_S_rf_power_start, I_S_rf_power)
+
+ne = l4.I_S_calculate_electron_density( I_S_rf_power, ionization_efficiency)
+
+I_final = l4.I_S_calculate__beam_current(ne)
+N_Intensity = l4.I_S_calculate_beam_intensity(I_final)
+epsilon = l4.I_S_calculate_beam_emittance()
+
+wiazka.energy = 4.5E-2
+wiazka.current = I_final  
+wiazka.N_Intensity =  N_Intensity 
+wiazka.epsilon = epsilon
+
+print(f"Informacje o wiązce:\n-energia wiązki {wiazka.energy}, \n-prąd w wiązce {wiazka.current}, \n-ilość jonów w wiązce tak zwana koncentracja jonów {wiazka.N_Intensity} \n-emitacja wiązki {wiazka.epsilon}")
 
 
-
-    #Wszystko dotyczące :
-
-
-
-    #Wszystko dotyczące :
-
-l4 = Linac4()
-
-
-print(l4.I_S_calculate_mass_hydrogen())
+        
+        
