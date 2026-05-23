@@ -4,7 +4,9 @@ ZAIMPORTOWANIE:
 a) bibliotek:
         time - opóźnianie procesów w terminalu
 b) plików/funkcjonalności z innych plików
-        utils->Colors - łatwe zarządzanie barwami w konsoli
+        utils - import stylów
+        object - import obiektów
+        physics - import mechanik fizycznych i obiektów   
 +=======================================+
 """
 
@@ -15,7 +17,7 @@ from utils import Console_clear, Print_title_screen
 from objects import User, Beam
 from physics import Linac4, PhysicalConstants, Electron, Proton, Hydrogen, Hydride_ion
 
-#Metoda główna - odpowiadająca za działanie programu w konsoli
+#Funkcja główna - odpowiadająca za działanie programu w konsoli
 def main():
     #zdefiniowanie obiektów potrzebnych do działania programu
     player = User()

@@ -12,7 +12,7 @@ import sys
 import time
 
 
-class Colors:
+class Styling:
     #Metoda przekonwertująca kolor HEX na formatowanie ANSII
     def convert_hex_to_ansii(hex_color):
         hex_color = hex_color.lstrip("#")
@@ -49,7 +49,37 @@ class Colors:
     help = convert_hex_to_ansii("#087C1F")
     help2 = convert_hex_to_ansii("#0CDA32")
 
-#Metoda służąca czyszczeniu 
+
+    map_background_color = "#CAECF3"
+
+    map_controllable_beam_color = "#6114D4"
+    map_automated_beam_color = "#BE87F4"
+
+    map_controllable_beam_thickness = 18
+    map_automated_beam_thickness = 18
+
+    map_linac4_color =  "#6C14E6"
+    map_bst_color = "#136A8C"
+    map_ps_color = "#3EE692"
+    map_sps_color = "#AF19E2"
+    map_lhc_color = "#0009F4"
+    map_detectors_color = "#D31172"
+    map_trn_line_color = "#888B8C"
+
+    map_linac4_thickness =  6
+    map_bst_thickness = 5
+    map_ps_thickness =  5
+    map_sps_thickness = 7
+    map_lhc_thickness = 8
+    map_trn_line_thickness = 4
+
+'''
++=======================================+
+PRZYDATNE FUNKCJE
++=======================================+
+'''      
+
+#Funkcja służąca czyszczeniu 
 def Console_clear():
     if os.name == 'nt':
         os.system('cls')  
@@ -58,13 +88,13 @@ def Console_clear():
 
 '''
 +=======================================+
-METODY SŁUŻĄCE DO UPIĘKSZENIA UI
+FUNKCJE SŁUŻĄCE DO UPIĘKSZENIA UI
 +=======================================+
 '''
 #Zdefiniowanie klasy
-colors = Colors()
+colors = Styling()
 
-#Metoda służąca do wyświetlania ekranu tytułowego
+#Funkcja służąca do wyświetlania ekranu tytułowego
 def Print_title_screen(display_time=8, lenght_bar=106):
     logo=fr'''{colors.bold}
 {colors.title_game_color1}  _____ ______ _____  _   _       {colors.title_game_color2} __  __ _____  _____      _            _    _ _____ _____  _____  _____ 
@@ -119,7 +149,7 @@ def Print_title_screen(display_time=8, lenght_bar=106):
     #powrót do zwykłego formatowania i pojawienie kursora w konsoli
     print(f"{colors.clear}{colors.show_cursor}")
 
-#Metoda służąca jako szablon do tworzenia różnych pasków proporcjonalnych wartość/maksymalna wartość
+#Funkcja służąca jako szablon do tworzenia różnych pasków proporcjonalnych wartość/maksymalna wartość
 def Create_progress_bar(current_value, min_value, max_value, lenght_bar, display_time, unit, color_target_value, color_undesired_value, color_text, prefix="", subfix=""):
     #ustalenie proporcji
     percent = current_value/max_value

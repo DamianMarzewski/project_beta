@@ -208,3 +208,19 @@ if __name__ == "__main__":
     wiazka.epsilon = epsilon
 
     print(f"Informacje o wiązce:\n-energia wiązki {wiazka.energy}, \n-prąd w wiązce {wiazka.current}, \n-ilość jonów w wiązce tak zwana koncentracja jonów {wiazka.N_Intensity} \n-emitacja wiązki {wiazka.epsilon}")
+
+
+    ------------------------------
+
+    TURTLE
+
+    -----------------------------------
+
+    Krzywa Beziera
+    Funkcja wektorowa do manipulacji w geogebra
+    
+    2 "magnesy"
+    B(t) = ((1-t)^3) * p0 + 3((1-t)^2) * t *p1 + 3(1-t) * (t^2) * p2 + (t^3) * p3
+
+    1 "magnes"
+    B(t) = (1 - t)^2 * p0 + 2 * (1 - t) * t * p1 + t^2 * p3
