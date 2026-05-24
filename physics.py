@@ -3,10 +3,12 @@
 ZAIMPORTOWANIE: 
 a) bibliotek:
         math - możliwość korzystania z bardziej zaawansowanej matematyki
+        random - wprowadzenie systemu losowości do mechanik symulacji
 +=======================================+
 """
 
 import math
+import random
 
 #Klasa stałych fizycznych - definiuje najważniejsze stałe potrzebne do wyliczeń
 class PhysicalConstants():
@@ -45,7 +47,7 @@ class Hydrogen():
 
 
 #Klasa anionu wodoru - definiuje stałe dla tego obiektu
-class Hydride_ion():
+class HydrideIon():
     def __init__(self):
         self.rest_mass_kg = 1.674278E-27 #[kg]
         self.rest_mass_mev = 939.294 #[mev/c^2]
@@ -53,22 +55,22 @@ class Hydride_ion():
         self.binding_energy_ev = 0.754 #[eV]
         self.max_safe_magnetic_field = 0.3 #[T]
         
-#Klasa odcinka w systemie akceleartorów (butla z H2 -> koniec Linac4) - zawiera wszystkie metody fizyczne dla tego odcinka
-class Linac4():
+#Klasa odcinka w systemie akceleartorów (butla z H2 -> Linac4) - zawiera wszystkie metody fizyczne dla tego odcinka
+class NegativeIonSource():
 
-    def __init__(self, PhysicalConstants, Electron, Proton, Hydrogen, Hydride_ion):
+    def __init__(self, PhysicalConstants, Electron, Proton, Hydrogen, HydrideIon):
         #zdefiniowanie obiektów
         self.PhysicalConstants = PhysicalConstants
         self.Electron = Electron
         self.Proton = Proton
         self.Hydrogen = Hydrogen
-        self.Hydride_ion = Hydride_ion
+        self.HydrideIon = HydrideIon
         
         #cała długość odcinka (butla z H2 -> koniec Linac4)
         self.overall_length = None #[m]
         
         #ION Source
-        self.HYDROGEN_FLOW_RATE = 8.7E-7 #[kg/s] #natężenie wodoru z zaworu piezoelektrycznego
+        self.HYDROGEN_FLOW_RATE = 1.794E-7  #[kg/s] #natężenie wodoru z zaworu piezoelektrycznego
         self.I_S_CHAMBER_VOLUME = 2.46E-4 #[m^3] #objętość komory
         self.I_S_CHAMBER_TEMPERATURE = 300 #[K] #temperatura w komorze
         self.I_S_EXTRACTION_ELECTRODE_VOLTAGE = 4.5E4 #[V] #siła, z jaką zasilacz w CERN ciągnie jony z komory ION Source
@@ -81,42 +83,42 @@ class Linac4():
 
         #stałe anionu wodoru
         self.I_S_ION_TEMPERATURE = 1.0 #[eV] #temperatura jonu wodoru wzięta z dokumentacji CERN
-        self.hydride_v_term = math.sqrt((2 * self.I_S_ION_TEMPERATURE * abs(self.Electron.charge)) / (self.Hydride_ion.rest_mass_kg)) #[m/s] #najprawdopodobniejsza prędkość jonów wodoru
+        self.hydride_v_term = math.sqrt((2 * self.I_S_ION_TEMPERATURE * abs(self.Electron.charge)) / (self.HydrideIon.rest_mass_kg)) #[m/s] #najprawdopodobniejsza prędkość jonów wodoru
         
     """
     -+/=============================================================/+-
-        ION Source - Wszsytkie metody dątyczące tego odcinka Linac4
+        ION Source - Wszsytkie metody dątyczące jego
     -+/=============================================================/+-
     """
 
     #Metoda wyliczająca mase wszystkich cząsteczek wodoru znajdującego się w komorze ION Source
     def I_S_calculate_mass_hydrogen(self, previous_mass, time_us):
-        if 200 < time_us < 500:
-            time_s = time_us*1e-6 #[us] #zmiana jednostki: us -> s
-            dt = 1E-7
-            current_time = 0.0
-            total_hydrogen_mass = previous_mass
-            while current_time < time_s:
-                if total_hydrogen_mass <= 0:
-                    mass_loss_rate = 0.0
-                else:
-                    #gęstość masowa gazu w komorze
-                    gas_density = total_hydrogen_mass / self.I_S_CHAMBER_VOLUME
+        if not (195 <= time_us <= 505):
+             raise OverflowError(f"Czas impulsu {time_us} us poza zakresem [200, 500]")
+        time_s = time_us*1e-6 #[us] #zmiana jednostki: us -> s
+        dt = 1E-7
+        current_time = 0.0
+        total_hydrogen_mass = previous_mass
+        while current_time < time_s:
+            if total_hydrogen_mass <= 0:
+                mass_loss_rate = 0.0
+            else:
+                #gęstość masowa gazu w komorze
+                gas_density = total_hydrogen_mass / self.I_S_CHAMBER_VOLUME
                     
-                    #efuzja, czyli ile kg gazu na sekundę ucieka przez otwór
-                    mass_loss_rate = 0.25 * gas_density * self.hydrogen_v_avg * self.I_S_hole_area
+                #efuzja, czyli ile kg gazu na sekundę ucieka przez otwór
+                mass_loss_rate = 0.25 * gas_density * self.hydrogen_v_avg * self.I_S_hole_area
                 
-                #zmiana masy 
-                mass_change = (self.HYDROGEN_FLOW_RATE - mass_loss_rate) * dt
+            #zmiana masy 
+            mass_change = (self.HYDROGEN_FLOW_RATE - mass_loss_rate) * dt
                     
 
-                #obliczamy nową masę
-                total_hydrogen_mass = max(0.0, total_hydrogen_mass + mass_change)
+            #obliczamy nową masę
+            total_hydrogen_mass = max(0.0, total_hydrogen_mass + mass_change)
                     
-                #zmieniamy czas o dt sekeund
-                current_time += dt
-        else:
-            print("System nie wykonał operacji, nie odpowiedni zakres czasowy")
+            #zmieniamy czas o dt sekeund
+            current_time += dt    
+            
         return total_hydrogen_mass
 
     #Metoda obliczająca gęstość liczbową (koncentracje) cząsteczek wodoru (H2)
@@ -130,7 +132,7 @@ class Linac4():
         p = n * self.PhysicalConstants.BOLTZMANN_CONSTANT * self.I_S_CHAMBER_TEMPERATURE 
         
         #ograniczenie ciśnienia [Pa] w komorze
-        if 149.02 < p <  500.02:
+        if 3.0 < p <  4.0:
             return p
         else:
             print("nieodpowiednie cisnienie")
@@ -143,7 +145,7 @@ class Linac4():
         try:
             #współczynnik wskazujący ile % atomów zmieni się w plazme
             ionization_efficiency = 1.0 / (1.0 + math.exp(-k_steepness * (I_S_rf_peak_power - p_threshold)))
-        except OverflowError:
+        except ValueError:
             ionization_efficiency = 0.0
 
         #zabezpieczenie przed wyjściem poza logiczny zakres sprawności [0.01 do 1.0]
@@ -217,17 +219,183 @@ class Linac4():
     #Metoda obliczająca znormalizowaną emitancję termiczną (epsilon) wiązki
     def I_S_calculate_beam_emittance(self):
         #obliczenie epsilon ze wzoru termicznego
-        epsilon = (self.I_S_AP_RADIUS * math.sqrt(self.I_S_ION_TEMPERATURE / (self.Hydride_ion.rest_mass_mev*1E6)))*1E6 #[pi * mm * mrad]
+        epsilon = (self.I_S_AP_RADIUS * math.sqrt(self.I_S_ION_TEMPERATURE / (self.HydrideIon.rest_mass_mev*1E6)))*1E6 #[pi * mm * mrad]
         
         return epsilon
        
+class Linac4():
+    """
+    -+/=====================================================/+-
+        LEBT (Low Energy Beam Transport) - wszsytkie metody 
+    -+/=====================================================/+-
+    """
+    def __init__(self, PhysicalConstants, Electron, Proton, Hydrogen, HydrideIon):
+        
+        #zdefiniowanie obiektów
+        self.PhysicalConstants = PhysicalConstants
+        self.Electron = Electron
+        self.Proton = Proton
+        self.Hydrogen = Hydrogen
+        self.HydrideIon = HydrideIon                
+ 
+        #stałe LEBT
+        self.LEBT_LENGTH = 1.8 # [m] 
+        self.LEBT_RADIUS = 0.01 #[m]       
+        self.NOMINAL_LOSS_PER_M = 0.05      #stała naturalna strata 5% prądu na każdy metr drogi
+        self.LEBT_VOLUME = math.pi * (self.LEBT_RADIUS ** 2) * self.LEBT_LENGTH
+    
+    #Metoda obliczająca zmianę ciśnienia w próżni
+    def lebt_calculate_vacuum(self, pumps_active, current_vacuum, dt=1E-3):
+        #napływ gazu zewnątrz podczas jednej sekundy
+        leak_rate = 1.5E-6 
+        
+        pumping_speed = 120.0 
+        if pumps_active == True:
+            pumping_speed = 120.0
+        else: 
+            pumping_speed = 0.0
 
+        #zmiana ciśnienia próżni w czasie dt
+        dp = ((leak_rate - (pumping_speed * current_vacuum)) / self.LEBT_VOLUME) * dt
+        new_vacuum = current_vacuum + dp
+        
+        #wyprowadzanie wyniku i blokada przed tym by ciśnienie nie wynosiło 0 (jest to nie realne)
+        return max(1.0E-7, min(1.0E-3, new_vacuum))
+
+    #Metoda obliczjąca straty prądu wiązki przez zderzenia z gazem resztkowym
+    def lebt_calculate_transmission(self, vacuum, current):
+        if current <= 0:
+            return 0.0
+            
+        sigma_stripping = 4.2E-19 
+
+        gas_n = vacuum * 2.4E22 
+        
+        if gas_n > 0:
+            lambda_stripping = 1.0 / (gas_n * sigma_stripping)
+            
+            #spadek prądu na dystansie długości LEBT (1.8m) wg rozkładu Beera-Lamberta
+            survival_probability = math.exp(-self.LEBT_LENGTH / lambda_stripping)
+            return current * survival_probability
+        
+        return current
+
+    #Metoda obliczająca ogniskowanie wiązki za pomocą pola magnetycznego Solenoidu
+    def lebt_calculate_solenoid_focus(self, current_solenoid, beam_energy_mev):
+        if current_solenoid <= 0:
+            return 0.0
+
+        magnetic_induction = current_solenoid * 0.0076 
+
+        kinetic_energy = beam_energy_mev * 1.602176634E-13 #[MeV] -> [J]
+        charge = abs(self.HydrideIon.charge)
+        
+        lenght_solenoid = 0.15 
+
+        focusing_force = (charge * (magnetic_induction ** 2) * lenght_solenoid) / (4 * kinetic_energy)
+        
+        return focusing_force
+
+    #Metoda licząca straty prądu spowodowane uderzeniami jonów z wiązki o ścianki oraz przez naturalne straty
+    def lebt_calculate_scraping_and_nominal_losses(self, y, current, dx):
+        if current <= 0:
+            return 0.0
+        #strata transportowa
+        current -= current * (self.NOMINAL_LOSS_PER_M * dx)
+
+        #strata przez uderzenia o ścianki
+        sigma_beam = 0.0025
+        distance_from_wall = self.LEBT_RADIUS - abs(y)
+        
+        
+        if distance_from_wall < (3 * sigma_beam):
+            proximity_factor = math.exp(- (distance_from_wall ** 2) / (2 * (sigma_beam ** 2)))
+            scraping_loss = current * proximity_factor * (dx / self.LEBT_LENGTH)
+            current = max(0.0, current - scraping_loss)
+
+        return current
+    
+    #strata prądu wiązki w wyniku niestabilności urządzeń
+    def lebt_apply_environmental_drift(self, current_solenoid, current_vacuum, dx):
+        if dx <= 0:
+            return current_solenoid, current_vacuum
+
+        cooling_fluctuation = random.uniform(0.95, 1.05)
+        #zmiana prądu zależy od kwadratu prądu (ciepło Joule'a P = I^2 * R) oraz przebytej drogi
+        thermal_decay = 1.2E-5 * (current_solenoid ** 2) * cooling_fluctuation * dx
+        new_solenoid = max(0.0, current_solenoid - thermal_decay)
+
+        desorption_burst = random.uniform(5.0E-7, 2.8E-6)
+        new_vacuum = current_vacuum + (desorption_burst * dx)
+        
+        new_vacuum = min(1.0E-3, new_vacuum)
+
+        return new_solenoid, new_vacuum
+        
+    
+    #Metoda obliczająca zmianę położenia poprzecznego y oraz kąta
+    def lebt_calculate_trajectory_step(self, x, y, angle, current, focusing_force, steerer_voltage, dx):   
+        space_charge_kick = (1.5E-4 * current * dx) / (abs(y) + 0.001) 
+
+        #wpływ magnesu korekcyjnego (Steerera)
+        steerer_kick = steerer_voltage * 1.85E-5
+
+        if focusing_force > 0:
+            new_angle = angle - (focusing_force * y * dx) + steerer_kick
+        else:
+            new_angle = angle + steerer_kick
+
+        if y >= 0:
+            new_angle += space_charge_kick
+        else:
+            new_angle -= space_charge_kick
+
+        new_y = y + (new_angle * dx)
+        new_x = x + dx
+
+        return new_x, new_y, new_angle
+    
+    #Metoda auktualizująca wszystkie parametry w LEBT
+    def lebt_process_automatic_step(self, beam, current_solenoid, current_vacuum, steerer_voltage, dx):
+       
+        #wyznaczenie degradacji maszynowej
+        updated_solenoid, updated_vacuum = self.lebt_apply_environmental_drift(current_solenoid, current_vacuum, dx)
+
+        #ktualizacja położenia wzdłużnego X
+        beam.position_x += dx
+
+        #dynamiczne przeliczenie strat prądu wiązki
+        beam.current = self.lebt_calculate_transmission(updated_vacuum, beam.current)
+        beam.current = self.lebt_calculate_scraping_and_nominal_losses(beam.position_y, beam.current, dx)
+
+        #wyznaczenie parametrów optyki magnetycznej dla nowego stanu cewki
+        K = self.lebt_calculate_solenoid_focus(updated_solenoid, beam.energy)
+
+        #całkowanie wektora geometrii trajektorii (Pozycja Y, Kąt)
+        _, new_y, new_angle = self.lebt_calculate_trajectory_step(
+            beam.position_x, beam.position_y, beam.angle, beam.current, K, steerer_voltage, dx
+        )
+        beam.position_y = new_y
+        beam.angle = new_angle
+
+        #sprawdzenie warunku awaryjnego wyłączenia
+        if abs(beam.position_y) > self.LEBT_RADIUS:
+            beam.is_alive = False
+
+        return updated_solenoid, updated_vacuum
     """
     -+/=====================================================/+-
         Radio-Frequency Quadrupole (RFQ) - wszsytkie metody 
     -+/=====================================================/+-
     """
     
+    """
+    -+/=========================================================/+-
+        MEBT (Medium  Energy Beam Transport) - wszsytkie metody 
+    -+/=========================================================/+-
+    """
+
+
     """
     -+/===========================================/+-
         Drift Tube Linac (DTL) - wszsytkie metody 

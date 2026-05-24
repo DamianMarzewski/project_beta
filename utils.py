@@ -45,10 +45,14 @@ class Styling:
     welcome_color_2 = convert_hex_to_ansii("#3DD0DE")
 
     prefix_cmd = convert_hex_to_ansii("#1648C6")
+    
     errors = convert_hex_to_ansii("#B11616")
-    help = convert_hex_to_ansii("#087C1F")
-    help2 = convert_hex_to_ansii("#0CDA32")
+    valid = convert_hex_to_ansii("#15A817")
+    help_color = convert_hex_to_ansii("#087C1F")
+    help_2_color = convert_hex_to_ansii("#0CDA32")
 
+    color_1 = convert_hex_to_ansii("#0BCDCD")
+    status_2_color = convert_hex_to_ansii("#76FBFB")
 
     map_background_color = "#CAECF3"
 
@@ -81,10 +85,7 @@ PRZYDATNE FUNKCJE
 
 #Funkcja służąca czyszczeniu 
 def Console_clear():
-    if os.name == 'nt':
-        os.system('cls')  
-    else:
-        os.system('clear')
+    os.system('cls' if os.name == 'nt' else 'clear')
 
 '''
 +=======================================+
@@ -104,72 +105,103 @@ def Print_title_screen(display_time=8, lenght_bar=106):
 {colors.title_game_color1}| |____| |____| | \ \| |\  |  _   {colors.title_game_color2}| |  | |_| |_ ____) | |__| / ____ \   | |  | |_| || |__| | |__| |____) |
 {colors.title_game_color1} \_____|______|_|  \_\_| \_| (_)  {colors.title_game_color2}|_|  |_|_____|_____/ \____/_/    \_\  |_|  |_|_____\_____|\_____|_____/ {colors.clear}
 '''
-    #uzyskanie szerokości terminala
-    console_width=os.get_terminal_size().columns
+    #pod funkcja rysująca klatki
+    def print_frame(i, max_bar_lenght, clear=False):
+        
+        if clear:
+            Console_clear() 
+        else:
+            sys.stdout.write("\033[H")  
+            sys.stdout.flush()
+        
+        
+        current_console_width = os.get_terminal_size().columns
 
-    #zmiana wielkości okna, zabezpieczenie przed zepsuciem napisu
+        spaces_count = [int((current_console_width-104)/2), int((current_console_width-4)/2), int((current_console_width-lenght_bar)/2), int((current_console_width-17)/2), int((current_console_width - 40)/2)]
+        
+        if current_console_width >= 111:
+           
+            lines = logo.split('\n')
+            for line in lines:
+                if line.strip():  # Pomija puste linie na końcach
+                    print(" " * spaces_count[0] + line)
+            
+            #wypisanie paska ładowania
+            percent = int((i / max_bar_lenght) * 100)
+            blocks = "█" * i + "░" * (max_bar_lenght - i)
+
+            sys.stdout.write(f"\n{colors.bar_color}\033[K\n")
+            sys.stdout.write(" " * spaces_count[1] + f"{percent}%\033[K\n")
+            sys.stdout.write(" " * spaces_count[2] + f"[{blocks}]{colors.clear}\033[K\n")
+        else:
+            #wypisywanie dla zbyt małego okna
+            percent = int((i / max_bar_lenght) * 100)
+            print(f"{colors.bar_color}\n" * 2)
+            print(" " * spaces_count[3] + "CERN: MISJA HIGGS\n")
+            print(" " * spaces_count[1] + f"{percent}%")
+            print(f"{colors.errors}\n" + " " * spaces_count[4] + "(Okno jest za małe, rozszerz je myszką!)")
+
+    console_width = os.get_terminal_size().columns
+
+    #zabezpieczenie przed zbyt małym rozmiarem
     if console_width <= 111:
         if os.name == 'nt':
-            os.system('mode con: cols=112 lines=12')
+            os.system('mode con: cols=112 lines=14')
         else:
-            os.system(r"printf '\e[8;12;112t'")
-    
-    console_width=os.get_terminal_size().columns
-    
-    #zapobiegnięcie przed duża wartością paska (wiekszą niż rozmiar konsoli)
-    lenght_bar = min(lenght_bar, (console_width-20))
-    
-    #lista z ilością spacji dla każdego elementu
-    spaces_count = [int((console_width-104)/2), int((console_width-4)/2), int((console_width-lenght_bar)/2)]
-    
-    #podzielenia i wypisanie loga
-    lines = logo.split('\n')
-    for i in lines:
-        print(" " * spaces_count[0] + i)
-    
-    #ustawienie specjalnego formatowania dla paska i ukrycie kursora w konsoli
-    print(f"\n{colors.hide_cursor}{colors.bar_color}")
-    
-    #utworzenie paska
+            sys.stdout.write(r"\e[8;14;112t")
+            sys.stdout.flush()
+        
+        time.sleep(0.1) 
+        
+        console_width = os.get_terminal_size().columns
+
+    #obliczenie ostatecznej długości paska
+    lenght_bar = min(lenght_bar, (console_width - 20))
+    if lenght_bar < 10: lenght_bar = 10 # Zabezpieczenie przed ujemną długością
+
+    #ukrycie kursora na początku wyrysowaniu
+    sys.stdout.write(colors.hide_cursor) 
+
+    previous_console_width = console_width
+
+    #pętla tworząca animacje paska
     for i in range(lenght_bar + 1):
-        percent = int((i / lenght_bar) * 100)
+        console_width = os.get_terminal_size().columns
+        clear = False
+        #sprawdzanie czy nie doszło do zmiany rozmiarów okna
+        if console_width != previous_console_width:
+            clear = True
+            # Dopasowujemy długość paska do nowych wymiarów okna, żeby nie wyszedł poza ekran
+            lenght_bar = min(106, (console_width - 20))
+            if lenght_bar < 10: lenght_bar = 10
+            previous_console_width = console_width
         
-        blocks = "█" * i + "░" * (lenght_bar - i)
-        
-        #wypisywanie paska ładowania i procentów
-        sys.stdout.write(f"\033[A\r"+ (" " * spaces_count[1]) + f"{percent}%")
-        sys.stdout.flush()
-        
-        sys.stdout.write(f"\033[B\r"+ (" " * spaces_count[2]) + f"[{blocks}]")
-        sys.stdout.flush()
-        
+        print_frame(min(i, lenght_bar), lenght_bar, clear=clear)
+
         time.sleep(display_time / lenght_bar)
 
     time.sleep(1)
-    #powrót do zwykłego formatowania i pojawienie kursora w konsoli
-    print(f"{colors.clear}{colors.show_cursor}")
+    #przywrócenie kursora i czyszczenie formatowania
+    sys.stdout.write(f"{colors.clear}{colors.show_cursor}")
+    Console_clear()
 
 #Funkcja służąca jako szablon do tworzenia różnych pasków proporcjonalnych wartość/maksymalna wartość
-def Create_progress_bar(current_value, min_value, max_value, lenght_bar, display_time, unit, color_target_value, color_undesired_value, color_text, prefix="", subfix=""):
+def Create_progress_bar(current_value, total_value, min_value, max_value, lenght_bar, display_time, color_target_value, color_undesired_value, color_text=colors.prefix_cmd,  prefix="", subfix="", print_value = False, unit=""):
     #ustalenie proporcji
-    percent = current_value/max_value
+    percent = current_value/total_value
     percent = min(percent, 1)
     
     #dlugość paska reprezentująca pasek zamalowany czyli posiadaną wartość
-    full_length = int(percent*lenght_bar)
+    full_length = max(int(percent*lenght_bar), 1)
     
     #tworzenie paska
     for length in range(full_length + 1):
         blocks = "█" * length + "░" * (lenght_bar - length)
         
-        #wypisywanie paska i danych obok niego
         if full_length > 0:
             animated_value = (length / full_length) * current_value
         else:
             animated_value = 0.0
-        decimal_places =len(str(current_value).split('.')[1])
-        animated_value = f"{animated_value:.{decimal_places}f}"
-
         if float(animated_value) <= float(min_value): 
             color_bar = color_undesired_value
         elif float(animated_value) >= float(max_value):
@@ -177,9 +209,20 @@ def Create_progress_bar(current_value, min_value, max_value, lenght_bar, display
         else:
             color_bar = color_target_value
         
-        sys.stdout.write(f"\r{prefix}{colors.hide_cursor}{color_bar}{blocks}{colors.clear} {color_text}{animated_value} {unit} {subfix}")
-        sys.stdout.flush()
+        if print_value == False:
+            sys.stdout.write(f"\r{prefix}{colors.hide_cursor}{color_bar}{blocks}{colors.clear} {color_text} {subfix}")
+            sys.stdout.flush()
+        
+        elif print_value == True:
+            decimal_places = len(str(current_value).split('.')[1])
+            animated_value = f"{animated_value:.{decimal_places}f}"
 
+            sys.stdout.write(f"\r{prefix}{colors.hide_cursor}{color_bar}{blocks}{colors.clear} {color_text}{animated_value} {unit} {subfix}")
+            sys.stdout.flush()
+        
+        else:
+            raise ValueError ("Żle wpisałeś wartość print_value")
+        
         time.sleep(display_time / lenght_bar)
     
     #czyszczenie formatowania
@@ -189,4 +232,6 @@ def Create_progress_bar(current_value, min_value, max_value, lenght_bar, display
 if __name__ == "__main__":
     print(f"{colors.welcome_color_1}TO JEST TEKST TESTOWY/to jest tekst testowy")
     print(f"{colors.welcome_color_2}TO JEST TEKST TESTOWY/to jest tekst testowy")
+
+logo=222
     

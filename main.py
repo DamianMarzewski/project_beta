@@ -15,16 +15,18 @@ import time
 from commands import *
 from utils import Console_clear, Print_title_screen
 from objects import User, Beam
-from physics import Linac4, PhysicalConstants, Electron, Proton, Hydrogen, Hydride_ion
+from physics import NegativeIonSource, PhysicalConstants, Electron, Proton, Hydrogen, HydrideIon
 
 #Funkcja główna - odpowiadająca za działanie programu w konsoli
 def main():
     #zdefiniowanie obiektów potrzebnych do działania programu
     player = User()
     login = AuthorizationPanel(player)
-    l4 = Linac4(PhysicalConstants(), Electron(), Proton(), Hydrogen(), Hydride_ion())
-    beam = Beam()
-    panel = ControlPanel(l4, beam)
+    ion_source = NegativeIonSource(PhysicalConstants(), Electron(), Proton(), Hydrogen(), HydrideIon())
+    l4 = Linac4(PhysicalConstants(), Electron(), Proton(), Hydrogen(), HydrideIon())
+    acc_env, beam = AcceleratorEnvironment(), Beam() 
+    panel_ion_source = ControlPanelIonSource(acc_env, beam, ion_source)
+    panel_l4 = ControlPanelLinac4(acc_env, beam, l4)
     
     #wyświetlenie ekranu tytułowego
     Console_clear()
@@ -34,17 +36,18 @@ def main():
     Console_clear()
     login.cmdloop()
     time.sleep(2)
-    
+
     #wyświetlenie cmd odpowiedzialnego za sterowanie Linac4
     Console_clear()
-    panel.cmdloop()
+    panel_ion_source.cmdloop()
+
+    #wyświetlenie cmd odpowiedzialnego za sterowanie Linac4
+    Console_clear()
+    panel_l4.cmdloop()
     
     #wyświetlenie raportu na temat wiązki
     Console_clear()
-    print(f"Energia wiązki {beam.energy}")
-    print(f"Prąd w wiązce {beam.current}") 
-    print(f"ilość jonów w wiązce tak zwana koncentracja jonów {beam.N_Intensity}") 
-    print(f"emitacja wiązki {beam.epsilon}")
+    panel_l4.do_status_wiazki()
 
 #Uruchomienie programu
 if __name__ == "__main__":

@@ -16,8 +16,8 @@ from utils import Styling
 #Dostęp do orgazinera stylami
 style = Styling()
 
-WIDTH = 1600
-HEIGHT = 900
+WIDTH = 0.85
+HEIGHT = 0.85
 #Funkcja inicjująca dziłanie graficznego okna 
 def screen_config(w, h):
     screen = turtle.Screen()
@@ -25,6 +25,7 @@ def screen_config(w, h):
     screen.title("Schemat Akceleratorów CERN")
     screen.bgcolor(f"{style.map_background_color}")
     screen.tracer(0) 
+    screen.setworldcoordinates(-800, -500, 800, 500)
     return screen
 
 #Funkcja rysująca elipse
@@ -111,7 +112,7 @@ def create_bezier_curve(pen, start_cordinates, end_cordinates, move_ratio, move_
         p3 = end_cordinates
         display_bezier_curve(pen, p0, p1, p3, p2, color_b=color, thickness_b=thickness)
 
-#Wyświatlanie kropki na mapie jako dany obiekt
+#Runkcja wyświatlająca kropki na mapie jako dany obiekt
 def display_dot_object(pen, x, y, size_object=24, color="black", text="", move_x=0, move_y=16, align_text="center"):
     pen.penup()
     pen.goto(x, y)
@@ -189,7 +190,7 @@ def map_main():
     screen = screen_config(w=WIDTH, h=HEIGHT)
     create_map()
     screen.update() 
-    turtle.done()
+    screen.exitonclick()
 
 if __name__ == "__main__":
     map_main()
