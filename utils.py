@@ -62,13 +62,13 @@ class Styling:
     map_controllable_beam_thickness = 18
     map_automated_beam_thickness = 18
 
-    map_linac4_color =  "#6C14E6"
-    map_bst_color = "#136A8C"
-    map_ps_color = "#3EE692"
-    map_sps_color = "#AF19E2"
-    map_lhc_color = "#0009F4"
-    map_detectors_color = "#D31172"
-    map_trn_line_color = "#888B8C"
+    map_linac4_color =  "#D01010"
+    map_bst_color = "#E09808"
+    map_ps_color = "#F5F906"
+    map_sps_color = "#18C91B"
+    map_lhc_color = "#003DF4"
+    map_detectors_color = "#9211D3"
+    map_trn_line_color = "#7B8183"
 
     map_linac4_thickness =  6
     map_bst_thickness = 5
@@ -76,6 +76,10 @@ class Styling:
     map_sps_thickness = 7
     map_lhc_thickness = 8
     map_trn_line_thickness = 4
+
+    background_detectors_thickness = 40
+    detectors_thickness = 30
+    text_thickness = 12
 
 '''
 +=======================================+

@@ -14,6 +14,7 @@ b) plików/funkcjonalności z innych plików
 import os
 import cmd
 import time
+import turtle
 
 from utils import Styling, Create_progress_bar 
 from cern_map import map_main
@@ -34,6 +35,9 @@ KONSOLA POLECEŃ SŁUŻĄCA DO STEROWANIA GRĄ
 """
 #KLasa będąca podstawą innych konsoli wykorzystywanych w programie
 class FunctionalCommands(cmd.Cmd):
+    def __init__(self, completekey = "tab", stdin = None, stdout = None):
+        super().__init__(completekey, stdin, stdout)
+        self.map_activated = False
     #Zmienne służące do wyświetlania czytelnego panelu pomocy
     HELP_TITLE = "SYSTEM POMOCY"
     HELP_SUBTITLE = "KOMENDY"
@@ -42,11 +46,23 @@ class FunctionalCommands(cmd.Cmd):
     #Metody biblioteki cmd, które powodują puste miejsca po wykonanej komendzie
     def precmd(self, line):
         """Wywołuje się automatycznie TUŻ PRZED każdą komendą."""
+        #Odświeżanie okna turtle aby się nie zawiesiło
+        if self.map_activated == True:
+            try:
+                turtle.update()
+            except turtle.Terminator:
+                pass
         print()  
         return line 
     
     def postcmd(self, stop, line):
         """Wywołuje się automatycznie PO każdej wykonanej komendzie."""
+        #Odświeżanie okna turtle aby się nie zawiesiło
+        if self.map_activated == True:
+            try:
+                turtle.update()
+            except turtle.Terminator:
+                pass
         print()  
         return stop
     
@@ -75,6 +91,7 @@ class FunctionalCommands(cmd.Cmd):
     #Komendy systemowe tzn. nie wpływające na rozgrywkę
     def do_mapa(self, arg):
         """Wyświetla mapę ośrodka i obiekty aktywne. \nUżycie: mapa"""
+        self.map_activated = True
         map_main()
     
     def do_clear(self, arg):
@@ -364,7 +381,7 @@ class ControlPanelLinac4(FunctionalCommands):
 
 
     #Komendy wpływające na rozgrywkę:
-    
+
     def do_prad_solenoidu(self, arg):
         '''Komenda ustawiająca prąd przepływający przez solenoid, aby skupiać wiązkę anionów wodoru. \nUżycie: prad_solenoidu <nateżenie pradu w Amperach [A]>'''
         try: 
