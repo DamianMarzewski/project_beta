@@ -14,7 +14,7 @@ import time
 
 from commands import *
 from utils import Console_clear, Print_title_screen
-from objects import User, Beam
+from objects import User, Beam, AcceleratorEnvironment
 from physics import NegativeIonSource, PhysicalConstants, Electron, Proton, Hydrogen, HydrideIon
 
 #Funkcja główna - odpowiadająca za działanie programu w konsoli
@@ -28,18 +28,18 @@ def main():
     panel_ion_source = ControlPanelIonSource(acc_env, beam, ion_source)
     panel_l4 = ControlPanelLinac4(acc_env, beam, l4)
     
-    #wyświetlenie ekranu tytułowego
-    Console_clear()
-    Print_title_screen()
+#     #wyświetlenie ekranu tytułowego
+#     Console_clear()
+#     Print_title_screen()
     
-    #wyświetlenie cmd odpowiedzialnego za autoryzacje
-    Console_clear()
-    login.cmdloop()
-    time.sleep(2)
+#     #wyświetlenie cmd odpowiedzialnego za autoryzacje
+#     Console_clear()
+#     login.cmdloop()
+#     time.sleep(2)
 
-    #wyświetlenie cmd odpowiedzialnego za sterowanie Linac4
-    Console_clear()
-    panel_ion_source.cmdloop()
+#     #wyświetlenie cmd odpowiedzialnego za sterowanie Linac4
+#     Console_clear()
+#     panel_ion_source.cmdloop()
 
     #wyświetlenie cmd odpowiedzialnego za sterowanie Linac4
     Console_clear()

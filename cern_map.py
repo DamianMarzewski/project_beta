@@ -1,19 +1,21 @@
 """
-+=======================================+
++========================================================================+
 ZAIMPORTOWANIE: 
 a) bibliotek:
+        time - opóźnianie procesów 
         math - możliwość korzystania z bardziej zaawansowanej matematyki
         turtle - możliwość tworzenia grafiki w oknie
 b) plików/funkcjonalności z innych plików
         utils - łatwe zarządzanie stylami
-+=======================================+
++========================================================================+
 """
 
+import time
 import math
 import turtle
-import time
 from utils import Styling
-
+from objects import AcceleratorEnvironment
+acc_env = AcceleratorEnvironment()
 #Klasa obsługująca tworzenie całej mapy w turtle
 class CernMapApp():
     def __init__(self):
@@ -96,9 +98,8 @@ class CernMapApp():
         
         # Twój żółw do animacji
         self.beam_pen = turtle.Turtle()
-        self.beam_pen.hideturtle()
-        self.beam_pen.penup()
         self.beam_pen.shape("circle")
+        self.beam_pen.hideturtle()
         self.beam_pen.penup()
         
 
@@ -267,7 +268,6 @@ class CernMapApp():
     #Metoda rysująca animację
     def animate_beam(self, track_names, color="#6114D4", size=18, speed_delay=0.01):
         self.beam_pen.color(color)
-        self.beam_pen.dot(size)
         
         first_track = track_names[0]
         if self.accelerator_tracks[first_track]:
@@ -282,7 +282,6 @@ class CernMapApp():
                 self.screen.update()
                 time.sleep(speed_delay)
                 
-        self.beam_pen.hideturtle()
         self.screen.update()
 
     #Metoda tworząca mapę
@@ -339,17 +338,19 @@ class CernMapApp():
         self.display_dot_object(self.config_layouts["map_legend"][2], self.config_layouts["map_legend"][3], self.style.map_automated_beam_thickness, self.style.map_automated_beam_color, legend_label_2, move=(18,-10), align_text="left", text_thickness=self.style.text_thickness)
 
     #Metoda tworząca animację po kolei
-    def create_animation(self, name):
-        if name == "Linac4":
+    def create_animation(self, current_accelerator):
+        if current_accelerator == "Linac4":
             self.track_names=['linac4']
-        elif name == "Booster":
+        elif current_accelerator == "Booster":
             self.track_names=['linac4', 'bst']
-        elif name == "PS":
+        elif current_accelerator == acc_env.ps:
             self.track_names=['linac4', 'bst', 'bstps', 'ps']
-        elif name =="SPS":
+        elif current_accelerator == acc_env.sps:
             self.track_names=['linac4', 'bst', 'bstps', 'ps', 'pssps', 'sps']
-        elif name == "LHC":
+        elif current_accelerator == acc_env.lhc:
             self.track_names=['linac4', 'bst', 'bstps', 'ps', 'pssps', 'sps', 'spslhc_r', 'lhc']
+        else: 
+            self.track_names=[]
         
         self.animate_beam(track_names=self.track_names, color="#6114D4", size=18, speed_delay=0.0001)
     
@@ -375,11 +376,11 @@ class CernMapApp():
             self.root.withdraw()
 
 #Funkcja inicjująca działanie wszystkiego związanego z mapą
-def map_main():
+def map_main(current_accelerator=""):
     try:
         app = CernMapApp()
         app.show_screen_window()
-        app.create_animation("LHC")
+        app.create_animation(current_accelerator=current_accelerator)
         
     except Exception as e:
             print(f"Wykonując komendę system napotkał błąd: {type(e).__name__} \n{str(e)}")

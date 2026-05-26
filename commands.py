@@ -19,14 +19,10 @@ import turtle
 from utils import Styling, Create_progress_bar 
 from cern_map import map_main
 
-from objects import AcceleratorEnvironment, Beam #TYMCZASOWE
 from physics import *
 
 #Dostęp do orgazinera stylami
 style = Styling()
-acc_env, beam = AcceleratorEnvironment(), Beam() #tymczasowo
-l4 = Linac4(PhysicalConstants(), Electron(), Proton(), Hydrogen(), HydrideIon()) #tymczosowo
-ion_source = NegativeIonSource(PhysicalConstants(), Electron(), Proton(), Hydrogen(), HydrideIon()) #tymczasowo
  
 """
 +=======================================+
@@ -509,6 +505,13 @@ class ControlPanelLinac4(FunctionalCommands):
         "gotowe": "Kończy działania na danym odcinku, w tym przypaduku w Linac4 LEBT"
     }
 
+    #Metoda wyświetlająca okno z mapą
+    def do_mapa(self, arg):
+        """Wyświetla mapę ośrodka i obiekty aktywne. \nUżycie: mapa"""
+        self.map_activated = True
+        map_main("Linac4")
+
+
     #Metoda służaca do udzielania podpwoeidzi by użytkownikowi wskazać co powinien robić 
     def do_podpowiedz(self, arg):
         if self.acc_env.active.step_game == 0:
@@ -528,7 +531,7 @@ class ControlPanelLinac4(FunctionalCommands):
         raport = (
             f"{'--- GEOMETRIA WIAZKI ---':^100}\n\n"
             f"{'Pozycja X (droga w tunelu):':<40} {self.beam.position_x:.4f} m\n"
-            f"{'Odchylenie Y od osi (cel: 0 mm):':<40} {self.beam_position_y_covert_to_mm:.4f} mm   [{beam.caluclate_percent_pos_y(0.01, 2)}]\n"
+            f"{'Odchylenie Y od osi (cel: 0 mm):':<40} {self.beam_position_y_covert_to_mm:.4f} mm   [{self.beam.caluclate_percent_pos_y(0.01, 2)}]\n"
             f"{'Kąt trajektorii (cel: 0 mrad):':<40} {self.beam_angle_conevrt_to_mrad:.4f} mrad\n"
             f"\n"
             f"{'--- ENERGIA I PREDKOSC ---':^100}\n\n"
@@ -750,40 +753,36 @@ class ControlPanelLinac4(FunctionalCommands):
 
         #sprawdza czy można przejść do kolejnej części symulatora
     def do_gotowe(self, arg):
-        # try:
-        if self.acc_env.active.step_game == 1: 
-            a = self.acc_env.active  
-            text_status = (
-            f"Całkowita droga wiązki:               {self.acc_env.active.path_length} m \n"
-            f"\n"
-            f"Odchylenie Y wiazki:                  {(self.beam.position_y * 1000):.4f} mm  (cel: blisko 0)\n"
-            f"Kat trajektorii:                      {(self.beam.angle * 1000):.4f} mrad (cel: blisko 0)\n"
-            f"Cisnienie prozni:                     {self.acc_env.active.current_vacuum:.3e} Pa\n"
-            f"\n"
-            f"Napięcie steerera ustawione na:       {self.acc_env.active.steerer_voltage:+.1f} V\n"
-            f"Prąd solenoidu:                       {self.acc_env.active.current_solenoid:.2f} A\n"
-            f"Siła ogniskowania:                    {self.acc_env.active.focusing_force:.6f} 1/m²\n"
-            )
-            self.do_clear("")
-            self._show_status(text_status,  title="RAPORT Z ODCINKA LEBT W LINAC4")
-            self.do_status_wiazki("")
-            self._set_stage(self.acc_env)
-            time.sleep(5)
-            self.do_exit("")
-            return True
-        else: 
-            text="Nie można przejśc do kolejnej części akcelartora! \nWiązka nie dotarła jescze do końca LEBT!"
-            self._handling_an_exception(text)        
+        try:
+            if self.acc_env.active.step_game == 1: 
+                a = self.acc_env.active  
+                text_status = (
+                f"Całkowita droga wiązki:               {self.acc_env.active.path_length} m \n"
+                f"\n"
+                f"Odchylenie Y wiazki:                  {(self.beam.position_y * 1000):.4f} mm  (cel: blisko 0)\n"
+                f"Kat trajektorii:                      {(self.beam.angle * 1000):.4f} mrad (cel: blisko 0)\n"
+                f"Cisnienie prozni:                     {self.acc_env.active.current_vacuum:.3e} Pa\n"
+                f"\n"
+                f"Napięcie steerera ustawione na:       {self.acc_env.active.steerer_voltage:+.1f} V\n"
+                f"Prąd solenoidu:                       {self.acc_env.active.current_solenoid:.2f} A\n"
+                f"Siła ogniskowania:                    {self.acc_env.active.focusing_force:.6f} 1/m²\n"
+                )
+                self.do_clear("")
+                self._show_status(text_status,  title="RAPORT Z ODCINKA LEBT W LINAC4")
+                self.do_status_wiazki("")
+                self._set_stage(self.acc_env)
+                time.sleep(5)
+                self.do_exit("")
+                return True
+            else: 
+                text="Nie można przejśc do kolejnej części akcelartora! \nWiązka nie dotarła jescze do końca LEBT!"
+                self._handling_an_exception(text)        
 
-        # except Exception as e:
-        #     text = f"Wykonując komendę system napotkał błąd:{type(e).__name__} \n{str(e)}"
-        #     self._handling_an_exception(text)
+        except Exception as e:
+            text = f"Wykonując komendę system napotkał błąd:{type(e).__name__} \n{str(e)}"
+            self._handling_an_exception(text)
 
 #Rzeczy, które się wykonają kiedy użytkownik odpali ten plik w konsoli
 if __name__ == "__main__":
     print("Jesteś w pliku commands!")
-    # panel1=ControlPanelIonSource(acc_env, beam, ion_source)
-    # panel1.cmdloop()
-    # panel=ControlPanelLinac4(acc_env, beam, l4)
-    # panel.cmdloop()
-    
+   
