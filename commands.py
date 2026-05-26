@@ -172,7 +172,7 @@ class FunctionalCommands(cmd.Cmd):
         print(f"{style.help_2_color}\n[ KOMENDY SYSTEMOWE ]{style.clear}")
         print(f"  {'mapa':35} - Wyświetla mape ośrodka CERN.")
         print(f"  {'podpowiedz':<35} - Wyświetla małą podpowiedź co w danym kroku gry trzeba zrobić.")
-        print(f"  {" ":<35}   (dostępna dopiero od włączenia systemu!)")
+        print(f"  {'':<35}   (dostępna dopiero od włączenia systemu!)")
         print(f"  {'help':<35} - Wyświetla menu pomocy.")
         print(f"  {'clear / cls / wyczysc':<35} - Czyszczenie ekranu konsoli.")
         print(f"  {'exit':<35} - Zamknięcie konsoli CERN'U! Nie programu!.")
@@ -189,7 +189,7 @@ KONSOLA POLECEŃ SŁUŻĄCA DO AUTORYZACJI PRZED GRĄ
 class AuthorizationPanel(FunctionalCommands):
     #Zdefiniowanie: prefixu wykonywanych komend, krótkiego przywitania użytkownika
     prompt = f"{style.bold}{style.prefix_cmd}CERN_AUTORYZACJA>>> {style.clear}"
-    title_intro =f"{'WITAJ W "CERN: MISJA HIGGS" ':^100}"
+    title_intro =f"{'WITAJ W CERN: MISJA HIGGS':^100}"
     intro = \
     f"{style.bold}{style.welcome_color_1}" + "=" * style.DECORATE_LENGHT \
     + f"{style.welcome_color_2}\n{title_intro}\n" \
@@ -422,7 +422,7 @@ class ControlPanelIonSource(FunctionalCommands):
 
                 if  40 < self.acc_env.active.T_cez < 100:
                     self.acc_env.active.step_game = 4
-                    text_status = f"Wszystko się zgadza! Możesz przejść do następnego kroku: gotowy" 
+                    text_status = f"Wszystko się zgadza! Możesz przejść do następnego kroku: gotowe" 
                     self._show_status(text_status, title="INFORMACJA", color_1=style.hint_color_1, color_2=style.hint_color_2)
                 else:
                     print(f"{style.bold}{style.prefix_cmd}CERN_CMD>>>ION_SOURCE>>> {style.clear}Jeśli czegoś nie rozumiesz użyj: podpowiedz")
@@ -541,9 +541,9 @@ class ControlPanelLinac4(FunctionalCommands):
             f"{'Intensywność (N cząstek):':<40} {self.beam.N_Intensity if self.beam.N_Intensity is not None else 'nie ustawiono'}\n"
             f"{'Emitancja (chaos trajektorii):':<40} {str(round(self.beam.epsilon, 4)) + ' mm*mrad' if self.beam.epsilon is not None else 'nie ustawiono'}\n"
             f"{'Świetlność potencjalna:':<40} {self.beam.luminosity_potential:.1f} %\n"
-            f"{"Profil (promień wiązki) (x, y):":<40} {self.beam.profile if self.beam.profile is not None else 'nie ustawiono'}\n"
-            f"{"Faza pola RF:":<40} {self.beam.RF_phase if self.beam.profile is not None else 'nie ustawiono'}\n"
-            f"{"Struktura wiązki:":<40} {self.beam.bunch_structure if self.beam.profile is not None else 'nie ustawiono'}"
+            f"{'Profil (promień wiązki) (x, y)':<40} {self.beam.profile if self.beam.profile is not None else 'nie ustawiono'}\n"
+            f"{'Faza pola RF:':<40} {self.beam.RF_phase if self.beam.profile is not None else 'nie ustawiono'}\n"
+            f"{'Struktura wiązki:':<40} {self.beam.bunch_structure if self.beam.profile is not None else 'nie ustawiono'}"
         )
          
         # Wywołanie wyświetlenia na ekranie
@@ -612,7 +612,9 @@ class ControlPanelLinac4(FunctionalCommands):
                     self.acc_env.active.step_game = 0
                 elif round(self.lebt_lenght, 1) == round(self.current_lebt_lenght, 1): 
                     self.acc_env.active.step_game = 1
-                
+            else:
+                self._print_step_error()   
+
         except ValueError:
             text = "Wartość prądu musi być liczbą w przedziale [200, 300]"
             self._handling_an_exception(text)
@@ -674,7 +676,9 @@ class ControlPanelLinac4(FunctionalCommands):
                     self.acc_env.active.step_game = 0
                 elif round(self.lebt_lenght, 1) == round(self.current_lebt_lenght, 1): 
                     self.acc_env.active.step_game = 1
-            
+            else:
+                self._print_step_error()
+        
         except ValueError:
             text = "Wartość napięcia musi być liczbą należącą do przedziału [-50, 50] V."
             self._handling_an_exception(text)
@@ -732,7 +736,9 @@ class ControlPanelLinac4(FunctionalCommands):
                 if round(self.lebt_lenght, 1) != round(self.current_lebt_lenght, 1):
                     self.acc_env.active.step_game = 0
                 elif round(self.lebt_lenght, 1) == round(self.current_lebt_lenght, 1): 
-                    self.acc_env.active.step_game = 11
+                    self.acc_env.active.step_game = 1
+            else:
+                self._print_step_error()
 
         except ValueError:
             text = "Wartość logiczna działania pompy została podana nieprawidłowo! Dostepne wartości to: <on/off>."

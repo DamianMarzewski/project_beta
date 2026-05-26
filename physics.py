@@ -248,13 +248,12 @@ class Linac4():
         LEBT (Low Energy Beam Transport) - wszsytkie metody 
     -+/=====================================================/+-
     """
-    
+
     #Metoda obliczająca aktualne ciśnienie w rurze po jednym ticku (komendzie)
     def lebt_calculate_vacuum(self, pumps_active, current_vacuum, dt=1E-3):
         leak_rate = 1.5E-6  # [Pa*m^3/s] stały napływ gazu przez mikroszczeliny
 
         if pumps_active:
-            # losowa fluktuacja sprawności pompy ±8% — pompa nie działa idealnie
             pump_efficiency = random.uniform(0.92, 1.08)
             pumping_speed = 120.0 * pump_efficiency
         else:
@@ -285,7 +284,6 @@ class Linac4():
         if current_solenoid <= 0:
             return 0.0
 
-        #szum termiczny cewki
         thermal_noise = random.gauss(0, 0.02)
 
         force = ((current_solenoid / 100.0) ** 2) * self.LEBT_SOLENOID_GAME_SCALE

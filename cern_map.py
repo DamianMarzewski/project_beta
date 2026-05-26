@@ -77,6 +77,12 @@ class CernMapApp():
             }
         }
 
+        self.track_points = [] 
+        self.beam_pen = turtle.Turtle()
+        self.beam_pen.shape("circle")
+        self.beam_pen.penup()
+        self.beam_pen.hideturtle()
+        
     #Metoda inicjująca dziłanie graficznego okna 
     def screen_config(self, left_x, left_y, right_x, right_y):
         self.screen = turtle.Screen()
