@@ -11,6 +11,7 @@ b) plików/funkcjonalności z innych plików
 
 import math
 import turtle
+import time
 from utils import Styling
 
 #Klasa obsługująca tworzenie całej mapy w turtle
@@ -77,12 +78,30 @@ class CernMapApp():
             }
         }
 
-        self.track_points = [] 
+        # [W __init__ klasy CernMapApp]
+        self.accelerator_tracks = {
+            "linac4": [],
+            "bst": [],
+            "bstps": [],
+            "ps": [],
+            "pssps": [],
+            "sps": [],
+            "spslhc_r": [], 
+            "spslhc_l": [],
+            "lhc": []
+        }
+        
+        # Flaga tekstowa – mówi programowi, do której szufladki teraz nagrywać
+        self.current_recording_track = None 
+        
+        # Twój żółw do animacji
         self.beam_pen = turtle.Turtle()
+        self.beam_pen.hideturtle()
+        self.beam_pen.penup()
         self.beam_pen.shape("circle")
         self.beam_pen.penup()
-        self.beam_pen.hideturtle()
         
+
     #Metoda inicjująca dziłanie graficznego okna 
     def screen_config(self, left_x, left_y, right_x, right_y):
         self.screen = turtle.Screen()
@@ -148,19 +167,24 @@ class CernMapApp():
         self.timer_resize = self.root.after(50, self.set_size)
 
     #Metoda rysująca elipse
-    def display_ellipse(self, center, radius, color, thickness, text="", text_thickness=14, move_text=(0,0)):
+    def display_ellipse(self, center, radius, color, thickness, text="", text_thickness=14, move_text=(0,0), key_name=""):
         self.pen.penup()
         self.pen.goto(center[0] + radius[0], center[1])
         self.pen.pendown()
         self.pen.color(color)
         self.pen.pensize(thickness)
         
+        self.current_recording_track = key_name
+        
         for i in range(self.line_accuracy + 1):
             radians = math.radians(i / 4.0)
             x = center[0] + radius[0] * math.cos(radians)
             y = center[1] + radius[1] * math.sin(radians)
             self.pen.goto(x, y)
-        
+            if self.current_recording_track in self.accelerator_tracks:
+                self.accelerator_tracks[self.current_recording_track].append(self.pen.pos())
+        self.pen.penup()
+
         if text:
             self.pen.penup()
             self.pen.goto(center[0] + move_text[0], center[1] + move_text[1])
@@ -178,29 +202,37 @@ class CernMapApp():
 
 
     #Metoda rysująca krzywe - wykorzystuje mechanizm Krzywej Beziera:
-    def display_bezier_curve(self, start_point, control_point_1, end_point, p2=None, color_b="black", thickness=3):
+    def display_bezier_curve(self, start_point, control_point_1, end_point, p2=None, color_b="black", thickness=3, key_name=''):
         self.pen.penup()
         self.pen.goto(start_point)
         self.pen.pendown()
         self.pen.color(color_b)
         self.pen.pensize(thickness)
         
+        self.current_recording_track = key_name
         if p2 is None:
             for i in range(1, self.line_accuracy + 1):
                 time = i / self.line_accuracy
                 x = (1 - time)**2 * start_point[0] + 2 * (1 - time) * time * control_point_1[0] + time**2 * end_point[0]
                 y = (1 - time)**2 * start_point[1] + 2 * (1 - time) * time * control_point_1[1] + time**2 * end_point[1]
                 self.pen.goto(x, y)
+                if self.current_recording_track in self.accelerator_tracks:
+                    self.accelerator_tracks[self.current_recording_track].append(self.pen.pos())
+            self.pen.penup()
+                
         else:
             for i in range(1, self.line_accuracy + 1):
                 time = i / self.line_accuracy
                 x = (1-time)**3 * start_point[0] + 3 * (1-time)**2 * time * control_point_1[0] + 3 * (1-time) * time**2 * p2[0] + time**3 * end_point[0]
                 y = (1-time)**3 * start_point[1] + 3 * (1-time)**2 * time * control_point_1[1] + 3 * (1-time) * time**2 * p2[1] + time**3 * end_point[1]
                 self.pen.goto(x, y) 
-
+                if self.current_recording_track in self.accelerator_tracks:
+                    self.accelerator_tracks[self.current_recording_track].append(self.pen.pos())
+            self.pen.penup()
+    
     #Metoda służąca do automatycznego tworzenia krzywych Beziera na podstawie danych: punkt startowy i punkt końcowy 
     #oraz wspołczyniki na podstawie wykresu geogebry które są proporcjonalnością wzięta z tamtego układu
-    def create_bezier_curve(self, start_cordinates, end_cordinates, move_ratio, move_ratio_2=None, color="#2e83f3", thickness=4):
+    def create_bezier_curve(self, start_cordinates, end_cordinates, move_ratio, move_ratio_2=None, color="#2e83f3", thickness=4, key_name=''):
         p0 = start_cordinates
         delta_x = end_cordinates[0]-start_cordinates[0]
         delta_y = end_cordinates[1]-start_cordinates[1]
@@ -208,17 +240,18 @@ class CernMapApp():
             control_point_1_move_by_start_cordinates = (move_ratio[0] * delta_x, move_ratio[1] * delta_y )
             control_point_1 = (start_cordinates[0] + control_point_1_move_by_start_cordinates[0], start_cordinates[1] + control_point_1_move_by_start_cordinates[1])
             end_point = end_cordinates
-            self.display_bezier_curve(p0, control_point_1, end_point, p2=None, color_b=color, thickness=thickness)
+            self.display_bezier_curve(p0, control_point_1, end_point, p2=None, color_b=color, thickness=thickness, key_name=key_name)
         else: 
             control_point_1_move_by_start_cordinates = (move_ratio[0] * delta_x, move_ratio[1] * delta_y )
             control_point_2_move_by_start_cordinates = (move_ratio_2[0] * delta_x, move_ratio_2[1] * delta_y )
             control_point_1 = (start_cordinates[0] + control_point_1_move_by_start_cordinates[0], start_cordinates[1] + control_point_1_move_by_start_cordinates[1])
             control_point_2 = (start_cordinates[0] + control_point_2_move_by_start_cordinates[0], start_cordinates[1] + control_point_2_move_by_start_cordinates[1])
             end_point = end_cordinates
-            self.display_bezier_curve(p0, control_point_1, end_point, control_point_2, color_b=color, thickness=thickness)
+            self.display_bezier_curve(p0, control_point_1, end_point, control_point_2, color_b=color, thickness=thickness, key_name=key_name)
 
     #Metoda wyświatlająca kropki na mapie jako dany obiekt
     def display_dot_object(self, x, y, size_object=24, color="black", text="", move=(0, 0), align_text="center", text_thickness=12):
+        
         self.pen.penup()
         self.pen.goto(x, y)
         self.pen.pendown()
@@ -228,6 +261,29 @@ class CernMapApp():
         self.pen.goto(x + move[0], y + move[1])
         self.pen.color(color)
         self.pen.write(text, align=align_text, font=("Arial", int(text_thickness), "bold"))
+        self.pen.penup()
+        self.pen.color(self.style.map_background_color)
+    
+    #Metoda rysująca animację
+    def animate_beam(self, track_names, color="#6114D4", size=18, speed_delay=0.01):
+        self.beam_pen.color(color)
+        self.beam_pen.dot(size)
+        
+        first_track = track_names[0]
+        if self.accelerator_tracks[first_track]:
+            self.beam_pen.goto(self.accelerator_tracks[first_track][0])
+            self.beam_pen.showturtle()
+
+        for track in track_names:
+            points = self.accelerator_tracks[track]
+            
+            for pt in points:
+                self.beam_pen.goto(pt)
+                self.screen.update()
+                time.sleep(speed_delay)
+                
+        self.beam_pen.hideturtle()
+        self.screen.update()
 
     #Metoda tworząca mapę
     def create_map(self):
@@ -238,20 +294,20 @@ class CernMapApp():
         #Linie transferowe:
 
         #SPS -> LHC (od ALICE)
-        self.create_bezier_curve(self.find_point_on_ellipse(self.sps_coords, self.sps_radius, 0.75), self.find_point_on_ellipse(self.lhc_coords, self.lhc_radius, 0.5), (1.2714, -0.3636), move_ratio_2=None, color=self.style.map_trn_line_color, thickness=self.style.map_trn_line_thickness)
+        self.create_bezier_curve(self.find_point_on_ellipse(self.sps_coords, self.sps_radius, 0.75), self.find_point_on_ellipse(self.lhc_coords, self.lhc_radius, 0.5), (1.2714, -0.3636), move_ratio_2=None, color=self.style.map_trn_line_color, thickness=self.style.map_trn_line_thickness, key_name='spslhc_r')
         
         #SPS -> LHC (od LHCb)
-        self.create_bezier_curve(self.find_point_on_ellipse(self.sps_coords, self.sps_radius, 0.13), self.find_point_on_ellipse(self.lhc_coords, self.lhc_radius, 0.925), (0.55, -2), move_ratio_2=(0.3, 3.2), color=self.style.map_trn_line_color, thickness=self.style.map_trn_line_thickness)
+        self.create_bezier_curve(self.find_point_on_ellipse(self.sps_coords, self.sps_radius, 0.13), self.find_point_on_ellipse(self.lhc_coords, self.lhc_radius, 0.925), (0.55, -2), move_ratio_2=(0.3, 3.2), color=self.style.map_trn_line_color, thickness=self.style.map_trn_line_thickness, key_name='spslhc_l')
         
         #PS -> SPS 
-        self.create_bezier_curve(self.find_point_on_ellipse(self.ps_coords, self.ps_radius, 0.5), self.find_point_on_ellipse(self.sps_coords, self.sps_radius, 0.5), (0.41, 0.31), move_ratio_2=(1.22, -0.4175), color=self.style.map_trn_line_color, thickness=self.style.map_trn_line_thickness)
+        self.create_bezier_curve(self.find_point_on_ellipse(self.ps_coords, self.ps_radius, 0.5), self.find_point_on_ellipse(self.sps_coords, self.sps_radius, 0.5), (0.41, 0.31), move_ratio_2=(1.22, -0.4175), color=self.style.map_trn_line_color, thickness=self.style.map_trn_line_thickness, key_name='pssps')
         
         #BOOSTER -> PS
-        self.create_bezier_curve(self.find_point_on_ellipse(self.bst_coords, self.bst_radius, 0.82), self.find_point_on_ellipse(self.ps_coords, self.ps_radius, 0.22), (0.2933, 1.08), move_ratio_2=(0.7167, 0.11), color=self.style.map_trn_line_color, thickness=self.style.map_trn_line_thickness)
+        self.create_bezier_curve(self.find_point_on_ellipse(self.bst_coords, self.bst_radius, 0.82), self.find_point_on_ellipse(self.ps_coords, self.ps_radius, 0.22), (0.2933, 1.08), move_ratio_2=(0.7167, 0.11), color=self.style.map_trn_line_color, thickness=self.style.map_trn_line_thickness, key_name='bstps')
         
 
-        #LINAC 4
-        self.create_bezier_curve(self.l4_start, self.l4_end, (0.5, 0.93), move_ratio_2=None, color=self.style.map_linac4_color, thickness=self.style.map_linac4_thickness, )
+        #LINAC4
+        self.create_bezier_curve(self.l4_start, self.l4_end, (0.5, 0.93), move_ratio_2=None, color=self.style.map_linac4_color, thickness=self.style.map_linac4_thickness, key_name='linac4')
         self.pen.penup()
         self.pen.goto(-70*self.config_layouts["linac4"], -360*self.config_layouts["linac4"])
         self.pen.color(self.style.map_linac4_color)
@@ -259,10 +315,10 @@ class CernMapApp():
         
 
         #stworzenie akceleratorów z wzoru na elipse
-        self.display_ellipse(self.lhc_coords, self.lhc_radius, self.style.map_lhc_color, self.style.map_lhc_thickness, text="LHC", text_thickness=self.style.text_thickness+2, move_text=(int(0*self.ratio_scale), int(0*self.ratio_scale)))
-        self.display_ellipse(self.sps_coords, self.sps_radius, self.style.map_sps_color, self.style.map_sps_thickness, text="SPS", text_thickness=self.style.text_thickness+2, move_text=(int(0*self.ratio_scale), int(-35*self.ratio_scale)))
-        self.display_ellipse(self.ps_coords, self.ps_radius, self.style.map_ps_color, self.style.map_ps_thickness, text="PS", text_thickness=self.style.text_thickness+2, move_text=(int(0*self.ratio_scale), int(-15*self.ratio_scale)))
-        self.display_ellipse(self.bst_coords, self.bst_radius, self.style.map_bst_color, self.style.map_bst_thickness, text="BOOSTER", text_thickness=self.style.text_thickness+1, move_text=(int(0*self.ratio_scale), int(35*self.ratio_scale)))
+        self.display_ellipse(self.lhc_coords, self.lhc_radius, self.style.map_lhc_color, self.style.map_lhc_thickness, text="LHC", text_thickness=self.style.text_thickness+2, move_text=(int(0*self.ratio_scale), int(0*self.ratio_scale)), key_name='lhc')
+        self.display_ellipse(self.sps_coords, self.sps_radius, self.style.map_sps_color, self.style.map_sps_thickness, text="SPS", text_thickness=self.style.text_thickness+2, move_text=(int(0*self.ratio_scale), int(-35*self.ratio_scale)), key_name='sps')
+        self.display_ellipse(self.ps_coords, self.ps_radius, self.style.map_ps_color, self.style.map_ps_thickness, text="PS", text_thickness=self.style.text_thickness+2, move_text=(int(0*self.ratio_scale), int(-15*self.ratio_scale)), key_name='ps')
+        self.display_ellipse(self.bst_coords, self.bst_radius, self.style.map_bst_color, self.style.map_bst_thickness, text="BOOSTER", text_thickness=self.style.text_thickness+1, move_text=(int(0*self.ratio_scale), int(35*self.ratio_scale)), key_name='bst')
     
 
         #stworzenie oznaczeń detektorów w LHC
@@ -282,6 +338,21 @@ class CernMapApp():
         self.display_dot_object(self.config_layouts["map_legend"][0], self.config_layouts["map_legend"][1], self.style.map_controllable_beam_thickness, self.style.map_controllable_beam_color, legend_label_1, move=(18, -10), align_text="left", text_thickness=self.style.text_thickness)
         self.display_dot_object(self.config_layouts["map_legend"][2], self.config_layouts["map_legend"][3], self.style.map_automated_beam_thickness, self.style.map_automated_beam_color, legend_label_2, move=(18,-10), align_text="left", text_thickness=self.style.text_thickness)
 
+    #Metoda tworząca animację po kolei
+    def create_animation(self, name):
+        if name == "Linac4":
+            self.track_names=['linac4']
+        elif name == "Booster":
+            self.track_names=['linac4', 'bst']
+        elif name == "PS":
+            self.track_names=['linac4', 'bst', 'bstps', 'ps']
+        elif name =="SPS":
+            self.track_names=['linac4', 'bst', 'bstps', 'ps', 'pssps', 'sps']
+        elif name == "LHC":
+            self.track_names=['linac4', 'bst', 'bstps', 'ps', 'pssps', 'sps', 'spslhc_r', 'lhc']
+        
+        self.animate_beam(track_names=self.track_names, color="#6114D4", size=18, speed_delay=0.0001)
+    
 
     def show_screen_window(self):
         self.timer_update = None
@@ -308,6 +379,8 @@ def map_main():
     try:
         app = CernMapApp()
         app.show_screen_window()
+        app.create_animation("LHC")
+        
     except Exception as e:
             print(f"Wykonując komendę system napotkał błąd: {type(e).__name__} \n{str(e)}")
 if __name__ == "__main__":
