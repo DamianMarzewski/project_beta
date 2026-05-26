@@ -449,7 +449,7 @@ class ControlPanelIonSource(FunctionalCommands):
                     )
                     self._show_status(text_status)
                     self.do_exit("")
-                    time.sleep
+                    time.sleep(2)
                     return True
                 else: 
                     self._print_step_error()
@@ -707,7 +707,6 @@ class ControlPanelLinac4(FunctionalCommands):
                 self.acc_env.active.focusing_force = self.accelerator.lebt_calculate_solenoid_focus(self.acc_env.active.current_solenoid, self.beam.energy)
                 self.acc_env.active.current_solenoid, self.acc_env.active.current_vacuum = self.accelerator.lebt_process_automatic_step(self.beam, self.acc_env.active.current_solenoid, self.acc_env.active.current_vacuum, self.acc_env.active.steerer_voltage, self.acc_env.active.dx)
 
-                # Ocena ciśnienia
                 if self.acc_env.active.current_vacuum < 1e-4:
                     rate = "DOSKONAŁA - bezpieczny transport wiązki"
                 elif  self.acc_env.active.current_vacuum < 1e-3:
